@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xb.reggie.mapper.EmployeeMapper">
+
+    <insert id="insertBatch">
+        insert into employee(id,username,name,
+        password,phone,sex,
+        id_number,status,create_time,
+        update_time,create_user,update_user)
+        values
+        <foreach collection="employeeCollection" item="item" separator=",">
+            (#{item.id,jdbcType=NUMERIC},#{item.username,jdbcType=VARCHAR},#{item.name,jdbcType=VARCHAR},
+            #{item.password,jdbcType=VARCHAR},#{item.phone,jdbcType=VARCHAR},#{item.sex,jdbcType=VARCHAR},
+            #{item.idNumber,jdbcType=VARCHAR},#{item.status,jdbcType=NUMERIC},#{item.createTime},
+            #{item.updateTime},#{item.createUser,jdbcType=NUMERIC},#{item.updateUser,jdbcType=NUMERIC})
+        </foreach>
+    </insert>
+</mapper>

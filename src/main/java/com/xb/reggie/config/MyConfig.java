@@ -1,14 +1,14 @@
 package com.xb.reggie.config;
 
-import com.alibaba.fastjson.support.spring.messaging.MappingFastJsonMessageConverter;
 import com.xb.reggie.common.JacksonObjectMapper;
+
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import java.util.ArrayList;
+
+
 import java.util.List;
 @Configuration
 public class MyConfig implements WebMvcConfigurer {
@@ -27,7 +27,12 @@ public class MyConfig implements WebMvcConfigurer {
 //        list.add("/front/**");
 //        registry.addInterceptor(new LoginInterceptor()).addPathPatterns("/**").excludePathPatterns(list);
 //    }
-
+//        @Override
+//        public void addResourceHandlers(ResourceHandlerRegistry registry) {
+//        registry.addResourceHandler("doc.html").addResourceLocations("classpath:/META-INF/resources/");
+//        registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
+//
+//    }
     @Override
     public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
         MappingJackson2HttpMessageConverter messageConverter=new MappingJackson2HttpMessageConverter();

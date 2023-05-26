@@ -1,7 +1,6 @@
 package com.xb.reggie.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xb.reggie.common.R;
@@ -14,12 +13,15 @@ import com.xb.reggie.service.CategoryService;
 import com.xb.reggie.service.DishFlavorService;
 import com.xb.reggie.service.DishService;
 import com.xb.reggie.vo.DishVo;
+import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @RestController
@@ -31,8 +33,12 @@ public class DishController extends BaseController{
     private DishFlavorService dishFlavorService;
     @Autowired
     private CategoryService categoryService;
+    @Resource
+    private RedisTemplate redisTemplate;
     @PostMapping
     public R<String> addDish(@RequestBody DishDto dishDto){
+            String key="dish_"+dishDto.getCategoryId()+"_1";
+            redisTemplate.delete(key);
             dishService.saveWithFlavor(dishDto);
             return R.success("添加成功");
     }
@@ -68,16 +74,22 @@ public class DishController extends BaseController{
     }
     @PutMapping
     public R<String> updateDishWithFlavor(@RequestBody DishDto dishDto){
+        String key="dish_"+dishDto.getCategoryId()+"_1";
+            redisTemplate.delete(key);
             dishService.updateWithFlavor(dishDto);
             return R.success("菜品信息修改成功");
     }
     @DeleteMapping
     public R<String> deleteDishWithFlavor(@RequestParam List<Long> ids){
+        Set keys = redisTemplate.keys("*");
+        redisTemplate.delete(keys);
         dishService.deleteWithFlavor(ids);
         return R.success("删除成功");
     }
     @PostMapping("/status/{status}")
     public R<String> updateStatus(@RequestParam List<Long> ids,@PathVariable Integer status){
+        Set keys = redisTemplate.keys("*");
+        redisTemplate.delete(keys);
        for(Long id :ids){
            LambdaUpdateWrapper<Dish> updateWrapper=new LambdaUpdateWrapper<>();
            updateWrapper.set(Dish::getStatus,status).eq(Dish::getId,id);
@@ -90,10 +102,15 @@ public class DishController extends BaseController{
     }
     @GetMapping("/list")
     public R<List<DishVo>> getDishAllByCategoryId(Long categoryId){
+        List<DishVo> dishVoList=null;
+        String key="dish_"+categoryId+"_1";
+        dishVoList=  (List<DishVo>) redisTemplate.opsForValue().get(key);
+        if(dishVoList!=null){
+            return R.success(dishVoList);
+        }
         LambdaQueryWrapper<Dish> queryWrapper=new LambdaQueryWrapper<>();
         queryWrapper.eq(Dish::getCategoryId,categoryId);
         List<Dish> list = dishService.list(queryWrapper);
-        List<DishVo> dishVoList=null;
          dishVoList=list.stream().map((item)->{
             DishVo dishVo=new DishVo();
             BeanUtils.copyProperties(item,dishVo);
@@ -103,6 +120,7 @@ public class DishController extends BaseController{
             dishVo.setFlavors(list1);
             return dishVo;
         }).collect(Collectors.toList());
+         redisTemplate.opsForValue().set(key,dishVoList,60, TimeUnit.MINUTES);
         return R.success(dishVoList);
     }
 }

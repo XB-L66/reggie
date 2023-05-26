@@ -18,6 +18,8 @@ import com.xb.reggie.vo.SetmealDishVo;
 import com.xb.reggie.vo.SetmealVo;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,6 +38,7 @@ public class SetmealController {
     @Autowired
     private DishService dishService;
     @PostMapping
+    @CacheEvict(value = "setmealCache",allEntries = true)
     public R<String> addSetmealWithDish(@RequestBody SetmealDto setmealDto){
         setmealService.addSetmealWithDish(setmealDto);
         return R.success("添加套餐成功");
@@ -61,11 +64,13 @@ public class SetmealController {
         return R.success(page1);
     }
     @DeleteMapping
+    @CacheEvict(value = "setmealCache",allEntries = true)
     public R<String> deleteSetmealByIds(@RequestParam List<Long> ids){
         setmealService.deleteSetmealWithDish(ids);
         return R.success("删除成功");
     }
     @PostMapping("/status/{status}")
+    @CacheEvict(value = "setmealCache",allEntries = true)
     public R<String> updateStatus(@RequestParam List<Long> ids,@PathVariable Integer status){
         for(Long id :ids){
             LambdaUpdateWrapper<Setmeal> updateWrapper=new LambdaUpdateWrapper<>();
@@ -83,10 +88,12 @@ public class SetmealController {
         return R.success(setmealVoById);
     }
     @PutMapping
+    @CacheEvict(value = "setmealCache",key = "#setmealDto.getCategoryId()+'_1'")
     public R<String> updateSetmealWithDish(@RequestBody SetmealDto setmealDto){
         setmealService.updateSetmealWithDish(setmealDto);
         return R.success("修改成功");
     }
+    @Cacheable(value = "setmealCache",key = "#categoryId+'_1'")
     @GetMapping("/list")
     public R<List<SetmealVo>> getSetmeal(Long categoryId,Integer status){
         LambdaQueryWrapper<Setmeal> queryWrapper=new LambdaQueryWrapper<>();

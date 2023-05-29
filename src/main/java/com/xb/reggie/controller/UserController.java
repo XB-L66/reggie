@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -47,6 +48,7 @@ public class UserController{
             if (user == null) {
                 user = new User();
                 user.setPhone(phone);
+                user.setName(UUID.randomUUID().toString());
                 userService.save(user);
             }
             session.setAttribute("user", user.getId());
